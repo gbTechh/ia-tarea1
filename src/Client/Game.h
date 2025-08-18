@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Enginee/Render.h"
 #include "../Enginee/window.h"
 #include <cstdint>
 #include <memory>
@@ -21,6 +22,7 @@ public:
 
 private:
   std::unique_ptr<GL::Window> m_Window{};
+  std::unique_ptr<GL::Render> m_Render{};
 
 private:
   void HandleUserInput();

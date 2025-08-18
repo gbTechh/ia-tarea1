@@ -1,6 +1,10 @@
 #pragma once
 
+#include "Render.h"
+#include <SDL2/SDL.h>
 #include <cstdint>
+#include <memory>
+
 namespace GL {
 class Window {
 public:
@@ -13,9 +17,13 @@ public:
   inline bool Running() const { return m_Running; };
   inline void Close() { m_Running = false; };
   void GetEvents();
+  void SwapBuffers();
+
+  std::unique_ptr<Render> CreateRender();
 
 private:
   void *m_WindowHandle = nullptr;
+  void *m_OpenGLContext = nullptr;
   bool m_Running = true;
 };
 } // namespace GL
