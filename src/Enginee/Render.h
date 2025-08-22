@@ -14,7 +14,7 @@ struct Vec4 {
 
 class Render {
 public:
-  Render() = default;
+  Render();
   virtual ~Render() = default;
 
   Render(const Render &other) = delete;
