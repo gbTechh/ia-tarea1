@@ -88,7 +88,12 @@ void Game::Render() {
 
   // Renderizar la cuadrícula
   m_GridRenderer->Render(m_RenderConfig);
-  HighlightNodes({0, 203}, glm::vec3(1.0f, 0.2f, 0.2f), 6.0f);
+  
+  if (m_StartNodeId >= 0)
+    HighlightNodes({(uint32_t)m_StartNodeId}, glm::vec3(0.0f, 1.0f, 0.0f), 8.0f);
+
+  if (m_EndNodeId >= 0)
+    HighlightNodes({(uint32_t)m_EndNodeId}, glm::vec3(1.0f, 0.0f, 0.0f), 8.0f);
 
   // Intercambiar buffers
   m_Window->SwapBuffers();

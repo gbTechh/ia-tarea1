@@ -41,6 +41,12 @@ private:
 
   GridRenderConfig m_RenderConfig{};
 
+  //configuarr click y nodos uiniciales
+  int m_StartNodeId = -1;
+  int m_EndNodeId = -1;
+
+  int GetNodeAtMouse(float mouseX, float mouseY);
+
 private:
   void HandleUserInput();
   void Update();
