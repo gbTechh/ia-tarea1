@@ -28,6 +28,11 @@ public:
                       const std::vector<uint32_t> &nodeIds,
                       const glm::vec3 &color, float size);
 
+  void RenderMasked(const std::vector<Node> &nodes,
+                    const std::vector<Connection> &connections,
+                    const std::vector<uint8_t> &activeMask,
+                    const GridRenderConfig &config);
+
 private:
   // Shaders
   uint32_t m_NodeShaderProgram = 0;

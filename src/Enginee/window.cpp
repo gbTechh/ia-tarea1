@@ -67,6 +67,11 @@ Window::~Window() {
 
 void Window::GetEvents() {
   SDL_Event e;
+  mouseClicked = false;
+
+  keySpacePressed = false;
+  keyEnterPressed = false;
+
   while (SDL_PollEvent(&e) != 0) {
     switch (e.type) {
     case SDL_QUIT:
@@ -77,6 +82,23 @@ void Window::GetEvents() {
       if (e.window.event == SDL_WINDOWEVENT_CLOSE) {
         std::cout << "Evento SDL_WINDOWEVENT_CLOSE recibido" << std::endl;
         m_Running = false;
+      }
+      break;
+    case SDL_MOUSEBUTTONDOWN:
+      if (e.button.button == SDL_BUTTON_LEFT) {
+        mouseX = e.button.x;
+        mouseY = e.button.y;
+        mouseClicked = true;
+      }
+      break;
+    case SDL_KEYDOWN:
+      if (e.key.repeat == 0) { // solo el primer "down", no autorepeat
+        if (e.key.keysym.sym == SDLK_SPACE) {
+          keySpacePressed = true;
+        } else if (e.key.keysym.sym == SDLK_RETURN ||
+                   e.key.keysym.sym == SDLK_KP_ENTER) {
+          keyEnterPressed = true;
+        }
       }
       break;
     }

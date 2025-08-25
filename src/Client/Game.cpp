@@ -1,10 +1,13 @@
 #include "Game.h"
 #include "../../include/glad/glad.h"
 #include <GL/gl.h>
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/trigonometric.hpp>
 #include <iostream>
 #include <memory>
+#include <numeric>
+#include <random>
 
 Game::Game() {
   std::cout << "Inicializando Game..." << std::endl;
@@ -47,6 +50,8 @@ void Game::InitializeGrid() {
   m_GridRenderer->UpdateGrid(m_GridGenerator->GetNodes(),
                              m_GridGenerator->GetConnections());
 
+  m_NodeActive.assign(m_GridGenerator->GetNodes().size(), 1);
+
   std::cout << "Cuadrícula configurada correctamente" << std::endl;
 }
 
@@ -67,7 +72,39 @@ void Game::Run() {
   }
 }
 
-void Game::HandleUserInput() { m_Window->GetEvents(); }
+void Game::HandleUserInput() {
+  m_Window->GetEvents();
+
+  if (m_Window->mouseClicked) {
+    int nodeId =
+        GetNodeAtMouse((float)m_Window->mouseX, (float)m_Window->mouseY);
+
+    if (nodeId != -1 && m_NodeActive[nodeId] == 1) {
+      if (m_StartNodeId == -1) {
+        m_StartNodeId = nodeId;
+        std::cout << "Nodo inicial: " << nodeId << std::endl;
+      } else if (m_EndNodeId == -1 && nodeId != m_StartNodeId) {
+        m_EndNodeId = nodeId;
+        std::cout << "Nodo final: " << nodeId << std::endl;
+      } else {
+        // Reiniciar selección
+        m_StartNodeId = nodeId;
+        m_EndNodeId = -1;
+        std::cout << "Reiniciando selección, nuevo nodo inicial: " << nodeId
+                  << std::endl;
+      }
+    }
+  }
+
+  // --- 👇 NUEVO: teclas ---
+  if (m_Window->keySpacePressed) {
+    RandomlyDeactivateNodes(m_RemovalFraction);
+  }
+
+  if (m_Window->keyEnterPressed) {
+    StartSearch(); // (solo prepara/avisa por ahora)
+  }
+}
 
 void Game::Update() {
   // // Animación sutil de colores
@@ -85,17 +122,45 @@ void Game::Update() {
 void Game::Render() {
   // Color de fondo oscuro para mejor contraste
   m_Render->CleanWindow(glm::vec4(0.1f, 0.1f, 0.15f, 1.0f));
+  const auto &nodes = m_GridGenerator->GetNodes();
+  const auto &conns = m_GridGenerator->GetConnections();
+
+  bool hasBlocked = !m_NodeActive.empty() &&
+                    std::any_of(m_NodeActive.begin(), m_NodeActive.end(),
+                                [](uint8_t v) { return v == 0; });
 
   // Renderizar la cuadrícula
-  m_GridRenderer->Render(m_RenderConfig);
-  
-  if (m_StartNodeId >= 0)
-    HighlightNodes({(uint32_t)m_StartNodeId}, glm::vec3(0.0f, 1.0f, 0.0f), 8.0f);
+  if (hasBlocked) {
+    m_GridRenderer->RenderMasked(nodes, conns, m_NodeActive, m_RenderConfig);
+  } else {
+    // Render normal (todo activo)
+    m_GridRenderer->Render(m_RenderConfig);
+  }
 
-  if (m_EndNodeId >= 0)
-    HighlightNodes({(uint32_t)m_EndNodeId}, glm::vec3(1.0f, 0.0f, 0.0f), 8.0f);
+  // Mostrar resultados de búsqueda si existen
+  if (m_ShowSearchResult) {
+    // Mostrar nodos visitados (color amarillo)
+    if (!m_LastSearchResult.visited.empty()) {
+      m_GridRenderer->HighlightNodes(nodes, m_LastSearchResult.visited,
+                                     glm::vec3(0.8f, 0.4f, 0.3f), 4.0f);
+    }
 
-  // Intercambiar buffers
+    // Mostrar camino encontrado (color verde más grande)
+    if (!m_LastSearchResult.path.empty()) {
+      m_GridRenderer->HighlightNodes(nodes, m_LastSearchResult.path,
+                                     glm::vec3(1.0, 1.0, 1.0), 6.0f);
+    }
+  }
+
+  if (m_StartNodeId != -1) {
+    m_GridRenderer->HighlightNodes(nodes, {(uint32_t)m_StartNodeId},
+                                   glm::vec3(0.0f, 1.0f, 0.0f), 8.0f);
+  }
+  if (m_EndNodeId != -1) {
+    m_GridRenderer->HighlightNodes(nodes, {(uint32_t)m_EndNodeId},
+                                   glm::vec3(1.0f, 0.0f, 0.0f), 8.0f);
+  }
+
   m_Window->SwapBuffers();
 }
 
@@ -103,4 +168,112 @@ void Game::HighlightNodes(const std::vector<uint32_t> &nodeIds,
                           const glm::vec3 &color, float size) {
   m_GridRenderer->HighlightNodes(m_GridGenerator->GetNodes(), nodeIds, color,
                                  size);
+}
+
+int Game::GetNodeAtMouse(float mouseX, float mouseY) {
+  // Convertir a NDC (Normalized Device Coordinates) en rango [-1, 1]
+  float ndcX = (2.0f * mouseX) / width - 1.0f;
+  float ndcY = 1.0f - (2.0f * mouseY) / height; // invertimos Y
+
+  const auto &nodes = m_GridGenerator->GetNodes();
+
+  int closestId = -1;
+  float minDist = 0.03f; // umbral de selección
+  for (const auto &node : nodes) {
+    float dx = ndcX - node.position.x;
+    float dy = ndcY - node.position.y;
+    float dist = std::sqrt(dx * dx + dy * dy);
+
+    if (dist < minDist) {
+      minDist = dist;
+      closestId = node.id;
+    }
+  }
+
+  return closestId;
+}
+
+void Game::RandomlyDeactivateNodes(float fraction) {
+  const auto &nodes = m_GridGenerator->GetNodes();
+  size_t N = nodes.size();
+  if (N == 0)
+    return;
+  if (fraction < 0.0f)
+    fraction = 0.0f;
+  if (fraction > 1.0f)
+    fraction = 1.0f;
+
+  // Todos activos y luego apagamos un subconjunto
+  m_NodeActive.assign(N, 1);
+
+  size_t toRemove = (size_t)std::floor(N * fraction);
+  if (toRemove == 0)
+    return;
+
+  // Lista de índices candidatos
+  std::vector<size_t> idx(N);
+  std::iota(idx.begin(), idx.end(), 0);
+
+  // Evitar desactivar el inicio/fin si existen
+  auto isProtected = [&](size_t i) {
+    return (m_StartNodeId >= 0 && (size_t)m_StartNodeId == i) ||
+           (m_EndNodeId >= 0 && (size_t)m_EndNodeId == i);
+  };
+
+  // Barajar
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::shuffle(idx.begin(), idx.end(), gen);
+
+  size_t removed = 0;
+  for (size_t i : idx) {
+    if (removed >= toRemove)
+      break;
+    if (isProtected(i))
+      continue;
+    m_NodeActive[i] = 0; // bloquear
+    ++removed;
+  }
+
+  std::cout << "Bloqueados " << removed << " nodos (" << (fraction * 100.0f)
+            << "% aprox)." << std::endl;
+}
+
+void Game::StartSearch() {
+  if (m_StartNodeId == -1 || m_EndNodeId == -1) {
+    std::cout << "[ENTER] Selecciona nodo inicial y final antes de iniciar la "
+                 "búsqueda."
+              << std::endl;
+    return;
+  }
+  // Aquí NO implementamos A* aún. Solo dejamos el “hook”.
+  RunBFS();
+
+  // En el futuro:
+  // - Construir vecinos usando m_GridConfig y descartando nodos con
+  // m_NodeActive[i] == 0
+  // - Correr tu algoritmo (BFS/Dijkstra/A*) y almacenar el path (lista de ids)
+  // - Dibujar el path con un Highlight especial o líneas custom
+}
+
+void Game::RunBFS() {
+  std::cout << "Ejecutando BFS desde " << m_StartNodeId << " hasta "
+            << m_EndNodeId << std::endl;
+
+  m_LastSearchResult = BFS::FindPath(
+      m_GridGenerator->GetNodes(), m_GridGenerator->GetConnections(),
+      m_NodeActive, static_cast<uint32_t>(m_StartNodeId),
+      static_cast<uint32_t>(m_EndNodeId));
+
+  m_ShowSearchResult = true;
+
+  if (m_LastSearchResult.found) {
+    std::cout << "Camino encontrado! Longitud: "
+              << m_LastSearchResult.path.size() << " nodos" << std::endl;
+    std::cout << "Nodos visitados: " << m_LastSearchResult.visited.size()
+              << std::endl;
+  } else {
+    std::cout << "No se encontró camino entre los nodos seleccionados"
+              << std::endl;
+  }
 }

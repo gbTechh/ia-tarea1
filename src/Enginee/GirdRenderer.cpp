@@ -312,3 +312,88 @@ void GridRenderer::HighlightNodes(const std::vector<Node> &nodes,
   glDeleteBuffers(1, &vbo);
   glDeleteVertexArrays(1, &vao);
 }
+
+void GridRenderer::RenderMasked(const std::vector<Node> &nodes,
+                                const std::vector<Connection> &connections,
+                                const std::vector<uint8_t> &activeMask,
+                                const GridRenderConfig &config) {
+  // Construimos vértices filtrados
+  std::vector<float> nodeVerts;
+  nodeVerts.reserve(nodes.size() * 2);
+  for (size_t i = 0; i < nodes.size(); ++i) {
+    if (i < activeMask.size() && activeMask[i]) {
+      nodeVerts.push_back(nodes[i].position.x);
+      nodeVerts.push_back(nodes[i].position.y);
+    }
+  }
+
+  std::vector<float> lineVerts;
+  lineVerts.reserve(connections.size() * 4);
+  for (const auto &c : connections) {
+    if (c.nodeA < activeMask.size() && c.nodeB < activeMask.size() &&
+        activeMask[c.nodeA] && activeMask[c.nodeB]) {
+      const Node &A = nodes[c.nodeA];
+      const Node &B = nodes[c.nodeB];
+      lineVerts.push_back(A.position.x);
+      lineVerts.push_back(A.position.y);
+      lineVerts.push_back(B.position.x);
+      lineVerts.push_back(B.position.y);
+    }
+  }
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  // --- Dibujar líneas filtradas (temporal) ---
+  if (!lineVerts.empty()) {
+    uint32_t vaoL = 0, vboL = 0;
+    glGenVertexArrays(1, &vaoL);
+    glGenBuffers(1, &vboL);
+    glBindVertexArray(vaoL);
+    glBindBuffer(GL_ARRAY_BUFFER, vboL);
+    glBufferData(GL_ARRAY_BUFFER, lineVerts.size() * sizeof(float),
+                 lineVerts.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
+                          (void *)0);
+    glEnableVertexAttribArray(0);
+
+    glUseProgram(m_LineShaderProgram);
+    glUniform3f(glGetUniformLocation(m_LineShaderProgram, "uColor"),
+                config.lineColor.r, config.lineColor.g, config.lineColor.b);
+    glLineWidth(config.lineWidth);
+    glDrawArrays(GL_LINES, 0, (GLsizei)(lineVerts.size() / 2));
+
+    glBindVertexArray(0);
+    glDeleteBuffers(1, &vboL);
+    glDeleteVertexArrays(1, &vaoL);
+  }
+
+  // --- Dibujar nodos filtrados (temporal) ---
+  if (!nodeVerts.empty()) {
+    uint32_t vaoN = 0, vboN = 0;
+    glGenVertexArrays(1, &vaoN);
+    glGenBuffers(1, &vboN);
+    glBindVertexArray(vaoN);
+    glBindBuffer(GL_ARRAY_BUFFER, vboN);
+    glBufferData(GL_ARRAY_BUFFER, nodeVerts.size() * sizeof(float),
+                 nodeVerts.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
+                          (void *)0);
+    glEnableVertexAttribArray(0);
+
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    glUseProgram(m_NodeShaderProgram);
+    glUniform3f(glGetUniformLocation(m_NodeShaderProgram, "uColor"),
+                config.nodeColor.r, config.nodeColor.g, config.nodeColor.b);
+    glUniform1f(glGetUniformLocation(m_NodeShaderProgram, "uPointSize"),
+                config.nodeSize);
+    glDrawArrays(GL_POINTS, 0, (GLsizei)(nodeVerts.size() / 2));
+
+    glBindVertexArray(0);
+    glDeleteBuffers(1, &vboN);
+    glDeleteVertexArrays(1, &vaoN);
+  }
+
+  glUseProgram(0);
+  glDisable(GL_BLEND);
+}

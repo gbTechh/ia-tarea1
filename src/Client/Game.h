@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Algorithms/BA/Ba.h"
 #include "../Enginee/GridGenerator.h"
 #include "../Enginee/GridRenderer.h"
 #include "../Enginee/Render.h"
@@ -29,6 +30,10 @@ public:
                       float size = 4.0f);
   void InitializeGrid();
 
+  void SetRemovalFraction(float fraction) { m_RemovalFraction = fraction; }
+
+  void RunBFS();
+
 private:
   std::unique_ptr<GL::Window> m_Window{};
   std::unique_ptr<GL::Render> m_Render{};
@@ -41,14 +46,27 @@ private:
 
   GridRenderConfig m_RenderConfig{};
 
-  //configuarr click y nodos uiniciales
+  // configuarr click y nodos uiniciales
   int m_StartNodeId = -1;
   int m_EndNodeId = -1;
 
-  int GetNodeAtMouse(float mouseX, float mouseY);
+  // 👇 NUEVO: máscara de nodos activos (1 activo, 0 bloqueado)
+  std::vector<uint8_t> m_NodeActive;
+
+  // 👇 NUEVO: % a eliminar (por defecto 30%)
+  float m_RemovalFraction = 0.30f;
+
+  //*********************ALGORITMOSSSS*********************
+  // BA:
+  BFS::Result m_LastSearchResult;
+  bool m_ShowSearchResult = false;
 
 private:
   void HandleUserInput();
   void Update();
   void Render();
+
+  void RandomlyDeactivateNodes(float fraction);
+  void StartSearch(); // stub/placeholder
+  int GetNodeAtMouse(float mouseX, float mouseY);
 };

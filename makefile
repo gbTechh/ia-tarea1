@@ -21,11 +21,17 @@ SRC_DIR = src
 ENGINE_DIR = $(SRC_DIR)/Enginee
 GLAD_DIR = $(SRC_DIR)/glad
 CLIENT_DIR = $(SRC_DIR)/Client
+ALGORITHMS_DIR = $(SRC_DIR)/Algorithms
 BIN_DIR = bin
 INC_DIR = include
 
 # Archivos fuente
-CPP_SRCS = $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(ENGINE_DIR)/*.cpp) $(wildcard $(CLIENT_DIR)/*.cpp)
+CPP_SRCS = $(wildcard $(SRC_DIR)/*.cpp) \
+           $(wildcard $(ENGINE_DIR)/*.cpp) \
+           $(wildcard $(CLIENT_DIR)/*.cpp) \
+           $(wildcard $(ALGORITHMS_DIR)/*.cpp) \
+           $(wildcard $(ALGORITHMS_DIR)/*/*.cpp)  # Incluir subdirectorios de Algorithms
+
 C_SRCS = $(wildcard $(GLAD_DIR)/*.c)
 OBJS = $(patsubst $(SRC_DIR)/%.cpp,$(BIN_DIR)/%.o,$(CPP_SRCS)) $(patsubst $(SRC_DIR)/%.c,$(BIN_DIR)/%.o,$(C_SRCS))
 
@@ -36,8 +42,8 @@ else
     TARGET = $(BIN_DIR)/sdl_app
 endif
 
-# Asegura que el directorio bin existe
-$(shell mkdir -p $(BIN_DIR) $(BIN_DIR)/Enginee $(BIN_DIR)/glad $(BIN_DIR)/Client)
+# Asegura que los directorios bin existen
+$(shell mkdir -p $(BIN_DIR) $(BIN_DIR)/Enginee $(BIN_DIR)/glad $(BIN_DIR)/Client $(BIN_DIR)/Algorithms $(BIN_DIR)/Algorithms/BA)
 
 # Regla principal
 all: $(TARGET)

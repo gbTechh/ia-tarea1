@@ -3,6 +3,8 @@
 int main() {
   Game game;
 
+  // 👇 NUEVO: porcentaje para SPACE (30%)
+  game.SetRemovalFraction(0.30f);
   // Inicializar grilla con esos parámetros
   game.InitializeGrid();
 
@@ -12,5 +14,6 @@ int main() {
                       glm::vec3(0.0f, 1.0f, 0.0f), 8.0f);
 
   game.Run();
+
   return 0;
 }

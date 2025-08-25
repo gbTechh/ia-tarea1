@@ -8,6 +8,14 @@
 namespace GL {
 class Window {
 public:
+  int mouseX = 0;
+  int mouseY = 0;
+  bool mouseClicked = false;
+
+  bool keySpacePressed = false;
+  bool keyEnterPressed = false;
+
+public:
   Window(const char *name, uint32_t width, uint32_t height);
   virtual ~Window();
 
