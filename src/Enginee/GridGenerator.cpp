@@ -18,9 +18,24 @@ void GridGenerator::GenerateGrid(const GridConfig &config) {
 
   CreateNodes(config);
   CreateConnections(config);
+  BuildAdjacencyList();
 
   std::cout << "Cuadrícula generada: " << m_Nodes.size() << " nodos, "
             << m_Connections.size() << " conexiones" << std::endl;
+}
+
+void GridGenerator::BuildAdjacencyList() {
+  // Limpiar lista anterior
+  m_AdjacencyList.clear();
+
+  // Por cada conexión, agregar vecinos a ambos nodos
+  for (const auto &conn : m_Connections) {
+    m_AdjacencyList[conn.nodeA].push_back(conn.nodeB);
+    m_AdjacencyList[conn.nodeB].push_back(conn.nodeA);
+  }
+
+  std::cout << "Lista de adyacencia construida para " << m_AdjacencyList.size()
+            << " nodos" << std::endl;
 }
 
 void GridGenerator::CreateNodes(const GridConfig &config) {

@@ -55,7 +55,8 @@ void Game::InitializeGrid() {
   std::cout << "Cuadrícula configurada correctamente" << std::endl;
 }
 
-void Game::Run() {
+void Game::Run(int n) {
+  nAlgorithm = n;
   std::cout << "Iniciando loop principal..." << std::endl;
 
   m_Render->Viewport(0, 0, width, height);
@@ -247,7 +248,20 @@ void Game::StartSearch() {
     return;
   }
   // Aquí NO implementamos A* aún. Solo dejamos el “hook”.
-  RunBFS();
+  switch (nAlgorithm) {
+  case 1:
+    RunBFS();
+    break;
+  case 2:
+    RunBP();
+    break;
+  case 3:
+    RunGreedy();
+    break;
+  default:
+    RunAstart();
+    break;
+  }
 
   // En el futuro:
   // - Construir vecinos usando m_GridConfig y descartando nodos con
@@ -260,7 +274,70 @@ void Game::RunBFS() {
   std::cout << "Ejecutando BFS desde " << m_StartNodeId << " hasta "
             << m_EndNodeId << std::endl;
 
-  m_LastSearchResult = BFS::FindPath(
+  m_LastSearchResult = Grafo::FindPathBFS(
+      m_GridGenerator->GetNodes(), m_GridGenerator->GetAdjacencyList(),
+      m_NodeActive, static_cast<uint32_t>(m_StartNodeId),
+      static_cast<uint32_t>(m_EndNodeId));
+
+  m_ShowSearchResult = true;
+
+  if (m_LastSearchResult.found) {
+    std::cout << "Camino encontrado! Longitud: "
+              << m_LastSearchResult.path.size() << " nodos" << std::endl;
+    std::cout << "Nodos visitados: " << m_LastSearchResult.visited.size()
+              << std::endl;
+  } else {
+    std::cout << "No se encontró camino entre los nodos seleccionados"
+              << std::endl;
+  }
+}
+void Game::RunBP() {
+  std::cout << "Ejecutando BP desde " << m_StartNodeId << " hasta "
+            << m_EndNodeId << std::endl;
+
+  m_LastSearchResult = Grafo::FindPathBP(
+      m_GridGenerator->GetNodes(), m_GridGenerator->GetConnections(),
+      m_NodeActive, static_cast<uint32_t>(m_StartNodeId),
+      static_cast<uint32_t>(m_EndNodeId));
+
+  m_ShowSearchResult = true;
+
+  if (m_LastSearchResult.found) {
+    std::cout << "Camino encontrado! Longitud: "
+              << m_LastSearchResult.path.size() << " nodos" << std::endl;
+    std::cout << "Nodos visitados: " << m_LastSearchResult.visited.size()
+              << std::endl;
+  } else {
+    std::cout << "No se encontró camino entre los nodos seleccionados"
+              << std::endl;
+  }
+}
+void Game::RunGreedy() {
+  std::cout << "Ejecutando BP desde " << m_StartNodeId << " hasta "
+            << m_EndNodeId << std::endl;
+
+  m_LastSearchResult = Grafo::FindPathBP(
+      m_GridGenerator->GetNodes(), m_GridGenerator->GetConnections(),
+      m_NodeActive, static_cast<uint32_t>(m_StartNodeId),
+      static_cast<uint32_t>(m_EndNodeId));
+
+  m_ShowSearchResult = true;
+
+  if (m_LastSearchResult.found) {
+    std::cout << "Camino encontrado! Longitud: "
+              << m_LastSearchResult.path.size() << " nodos" << std::endl;
+    std::cout << "Nodos visitados: " << m_LastSearchResult.visited.size()
+              << std::endl;
+  } else {
+    std::cout << "No se encontró camino entre los nodos seleccionados"
+              << std::endl;
+  }
+}
+void Game::RunAstart() {
+  std::cout << "Ejecutando BP desde " << m_StartNodeId << " hasta "
+            << m_EndNodeId << std::endl;
+
+  m_LastSearchResult = Grafo::FindPathBP(
       m_GridGenerator->GetNodes(), m_GridGenerator->GetConnections(),
       m_NodeActive, static_cast<uint32_t>(m_StartNodeId),
       static_cast<uint32_t>(m_EndNodeId));

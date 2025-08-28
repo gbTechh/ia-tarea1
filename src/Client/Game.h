@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Algorithms/BA/Ba.h"
+#include "../Algorithms/Grafo.h"
 #include "../Enginee/GridGenerator.h"
 #include "../Enginee/GridRenderer.h"
 #include "../Enginee/Render.h"
@@ -23,7 +23,7 @@ public:
   Game(const Game &other) = delete;
   Game &operator=(const Game &other) = delete;
 
-  void Run();
+  void Run(int algorithm); // 1 ba, 2bf, 3 greedy, 4 A*
 
   void HighlightNodes(const std::vector<uint32_t> &nodeIds,
                       const glm::vec3 &color = glm::vec3(1.0f, 0.0f, 0.0f),
@@ -33,6 +33,9 @@ public:
   void SetRemovalFraction(float fraction) { m_RemovalFraction = fraction; }
 
   void RunBFS();
+  void RunBP();
+  void RunGreedy();
+  void RunAstart();
 
 private:
   std::unique_ptr<GL::Window> m_Window{};
@@ -55,10 +58,10 @@ private:
 
   // 👇 NUEVO: % a eliminar (por defecto 30%)
   float m_RemovalFraction = 0.30f;
-
+  int nAlgorithm;
   //*********************ALGORITMOSSSS*********************
   // BA:
-  BFS::Result m_LastSearchResult;
+  Grafo::Result m_LastSearchResult;
   bool m_ShowSearchResult = false;
 
 private:
