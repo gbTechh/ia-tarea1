@@ -1,5 +1,5 @@
-#include "../../include/glad/glad.h"
 #include "GridRenderer.h"
+#include "../../include/glad/glad.h"
 #include <iostream>
 
 GridRenderer::GridRenderer() {}
@@ -309,6 +309,55 @@ void GridRenderer::HighlightNodes(const std::vector<Node> &nodes,
   // Cleanup
   glBindVertexArray(0);
   glUseProgram(0);
+  glDeleteBuffers(1, &vbo);
+  glDeleteVertexArrays(1, &vao);
+}
+
+void GridRenderer::HighlightEdges(const std::vector<Node> &nodes,
+                                  const std::vector<uint32_t> &nodeIds,
+                                  const glm::vec3 &color, float lineWidth) {
+  if (nodeIds.size() < 2)
+    return;
+
+  std::vector<float> lineVertices;
+  lineVertices.reserve(nodeIds.size() * 4);
+
+  // Crear líneas entre nodos consecutivos
+  for (size_t i = 0; i < nodeIds.size() - 1; ++i) {
+    if (nodeIds[i] < nodes.size() && nodeIds[i + 1] < nodes.size()) {
+      const Node &nodeA = nodes[nodeIds[i]];
+      const Node &nodeB = nodes[nodeIds[i + 1]];
+
+      lineVertices.push_back(nodeA.position.x);
+      lineVertices.push_back(nodeA.position.y);
+      lineVertices.push_back(nodeB.position.x);
+      lineVertices.push_back(nodeB.position.y);
+    }
+  }
+
+  // Dibujar líneas
+  uint32_t vao, vbo;
+  glGenVertexArrays(1, &vao);
+  glGenBuffers(1, &vbo);
+
+  glBindVertexArray(vao);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, lineVertices.size() * sizeof(float),
+               lineVertices.data(), GL_STATIC_DRAW);
+
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
+
+  glUseProgram(m_LineShaderProgram);
+  glUniform3f(glGetUniformLocation(m_LineShaderProgram, "uColor"), color.r,
+              color.g, color.b);
+  glLineWidth(lineWidth);
+
+  glBindVertexArray(vao);
+  glDrawArrays(GL_LINES, 0, lineVertices.size() / 2);
+
+  // Cleanup
+  glBindVertexArray(0);
   glDeleteBuffers(1, &vbo);
   glDeleteVertexArrays(1, &vao);
 }

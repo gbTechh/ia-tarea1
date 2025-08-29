@@ -22,16 +22,16 @@ public:
       const std::vector<Node> &nodes,
       const std::unordered_map<uint32_t, std::vector<uint32_t>> &adjacencyList,
       const std::vector<uint8_t> &nodeActive, uint32_t startId, uint32_t endId);
-  static Result FindPathBP(const std::vector<Node> &nodes,
-                           const std::vector<Connection> &connections,
-                           const std::vector<uint8_t> &nodeActive,
-                           uint32_t startId, uint32_t endId);
-  static Result FindPathGreedy(const std::vector<Node> &nodes,
-                               const std::vector<Connection> &connections,
-                               const std::vector<uint8_t> &nodeActive,
-                               uint32_t startId, uint32_t endId);
-  static Result FindPathAstart(const std::vector<Node> &nodes,
-                               const std::vector<Connection> &connections,
-                               const std::vector<uint8_t> &nodeActive,
-                               uint32_t startId, uint32_t endId);
+  static Result FindPathBP(
+      const std::vector<Node> &nodes,
+      const std::unordered_map<uint32_t, std::vector<uint32_t>> &adjacencyList,
+      const std::vector<uint8_t> &nodeActive, uint32_t startId, uint32_t endId);
+  static Result FindPathHillC(
+      const std::vector<Node> &nodes,
+      const std::unordered_map<uint32_t, std::vector<uint32_t>> &adjacencyList,
+      const std::vector<uint8_t> &nodeActive, uint32_t startId, uint32_t endId);
+  static Result FindPathAstart(
+      const std::vector<Node> &nodes,
+      const std::unordered_map<uint32_t, std::vector<uint32_t>> &adjacencyList,
+      const std::vector<uint8_t> &nodeActive, uint32_t startId, uint32_t endId);
 };

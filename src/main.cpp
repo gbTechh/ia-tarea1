@@ -13,7 +13,7 @@ int main() {
   game.HighlightNodes({0, 2 * game.m_GridConfig.width + 3},
                       glm::vec3(0.0f, 1.0f, 0.0f), 8.0f);
 
-  game.Run(1);
+  game.Run(0);
 
   return 0;
 }

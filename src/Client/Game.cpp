@@ -97,13 +97,22 @@ void Game::HandleUserInput() {
     }
   }
 
-  // --- 👇 NUEVO: teclas ---
+  if (m_Window->keyRightPressed) {
+    nAlgorithm = (nAlgorithm % 4) + 1; // 1→2→3→4→1
+    std::cout << "Algoritmo cambiado a: " << nAlgorithm << std::endl;
+  }
+
+  if (m_Window->keyLeftPressed) {
+    nAlgorithm = (nAlgorithm - 2 + 4) % 4 + 1; // 1→4→3→2→1
+    std::cout << "Algoritmo cambiado a: " << nAlgorithm << std::endl;
+  }
+
   if (m_Window->keySpacePressed) {
     RandomlyDeactivateNodes(m_RemovalFraction);
   }
 
   if (m_Window->keyEnterPressed) {
-    StartSearch(); // (solo prepara/avisa por ahora)
+    StartSearch(); // Solo iniciar búsqueda con Enter
   }
 }
 
@@ -143,13 +152,17 @@ void Game::Render() {
     // Mostrar nodos visitados (color amarillo)
     if (!m_LastSearchResult.visited.empty()) {
       m_GridRenderer->HighlightNodes(nodes, m_LastSearchResult.visited,
-                                     glm::vec3(0.8f, 0.4f, 0.3f), 4.0f);
+                                     glm::vec3(0.2f, 1.0f, 0.5f), 4.0f);
+      // m_GridRenderer->HighlightEdges(nodes, m_LastSearchResult.visited,
+      // glm::vec3(0.2f, 1.0f, 0.5f), 1.0f);
     }
 
     // Mostrar camino encontrado (color verde más grande)
     if (!m_LastSearchResult.path.empty()) {
       m_GridRenderer->HighlightNodes(nodes, m_LastSearchResult.path,
                                      glm::vec3(1.0, 1.0, 1.0), 6.0f);
+      m_GridRenderer->HighlightEdges(nodes, m_LastSearchResult.path,
+                                     glm::vec3(1.0, 1.0, 1.0), 1.0f);
     }
   }
 
@@ -256,7 +269,7 @@ void Game::StartSearch() {
     RunBP();
     break;
   case 3:
-    RunGreedy();
+    RunHillC();
     break;
   default:
     RunAstart();
@@ -296,7 +309,7 @@ void Game::RunBP() {
             << m_EndNodeId << std::endl;
 
   m_LastSearchResult = Grafo::FindPathBP(
-      m_GridGenerator->GetNodes(), m_GridGenerator->GetConnections(),
+      m_GridGenerator->GetNodes(), m_GridGenerator->GetAdjacencyList(),
       m_NodeActive, static_cast<uint32_t>(m_StartNodeId),
       static_cast<uint32_t>(m_EndNodeId));
 
@@ -312,12 +325,12 @@ void Game::RunBP() {
               << std::endl;
   }
 }
-void Game::RunGreedy() {
+void Game::RunHillC() {
   std::cout << "Ejecutando BP desde " << m_StartNodeId << " hasta "
             << m_EndNodeId << std::endl;
 
-  m_LastSearchResult = Grafo::FindPathBP(
-      m_GridGenerator->GetNodes(), m_GridGenerator->GetConnections(),
+  m_LastSearchResult = Grafo::FindPathHillC(
+      m_GridGenerator->GetNodes(), m_GridGenerator->GetAdjacencyList(),
       m_NodeActive, static_cast<uint32_t>(m_StartNodeId),
       static_cast<uint32_t>(m_EndNodeId));
 
@@ -337,8 +350,8 @@ void Game::RunAstart() {
   std::cout << "Ejecutando BP desde " << m_StartNodeId << " hasta "
             << m_EndNodeId << std::endl;
 
-  m_LastSearchResult = Grafo::FindPathBP(
-      m_GridGenerator->GetNodes(), m_GridGenerator->GetConnections(),
+  m_LastSearchResult = Grafo::FindPathAstart(
+      m_GridGenerator->GetNodes(), m_GridGenerator->GetAdjacencyList(),
       m_NodeActive, static_cast<uint32_t>(m_StartNodeId),
       static_cast<uint32_t>(m_EndNodeId));
 

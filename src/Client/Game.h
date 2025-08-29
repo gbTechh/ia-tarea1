@@ -34,7 +34,7 @@ public:
 
   void RunBFS();
   void RunBP();
-  void RunGreedy();
+  void RunHillC();
   void RunAstart();
 
 private:

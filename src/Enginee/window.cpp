@@ -71,6 +71,8 @@ void Window::GetEvents() {
 
   keySpacePressed = false;
   keyEnterPressed = false;
+  keyRightPressed = false;
+  keyLeftPressed = false;
 
   while (SDL_PollEvent(&e) != 0) {
     switch (e.type) {
@@ -92,12 +94,17 @@ void Window::GetEvents() {
       }
       break;
     case SDL_KEYDOWN:
-      if (e.key.repeat == 0) { // solo el primer "down", no autorepeat
+      if (e.key.repeat == 0) { // Solo primera pulsación
         if (e.key.keysym.sym == SDLK_SPACE) {
           keySpacePressed = true;
         } else if (e.key.keysym.sym == SDLK_RETURN ||
                    e.key.keysym.sym == SDLK_KP_ENTER) {
           keyEnterPressed = true;
+        } else if (e.key.keysym.sym == SDLK_LEFT) {
+          keyLeftPressed = true;
+        } else if (e.key.keysym.sym == SDLK_RIGHT ||
+                   e.key.keysym.sym == SDLK_KP_6) {
+          keyRightPressed = true;
         }
       }
       break;

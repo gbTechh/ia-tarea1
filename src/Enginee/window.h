@@ -14,6 +14,8 @@ public:
 
   bool keySpacePressed = false;
   bool keyEnterPressed = false;
+  bool keyRightPressed = false;
+  bool keyLeftPressed = false;
 
 public:
   Window(const char *name, uint32_t width, uint32_t height);
