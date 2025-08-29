@@ -36,6 +36,7 @@ public:
   void RunBP();
   void RunHillC();
   void RunAstart();
+  void RunAstart2();
 
 private:
   std::unique_ptr<GL::Window> m_Window{};

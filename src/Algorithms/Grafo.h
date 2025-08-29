@@ -34,4 +34,11 @@ public:
       const std::vector<Node> &nodes,
       const std::unordered_map<uint32_t, std::vector<uint32_t>> &adjacencyList,
       const std::vector<uint8_t> &nodeActive, uint32_t startId, uint32_t endId);
+  static Result FindPathAstart2(
+      const std::vector<Node> &nodes,
+      const std::unordered_map<uint32_t, std::vector<uint32_t>> &adjacencyList,
+      const std::vector<uint8_t> &nodeActive, uint32_t startId, uint32_t endId);
+  static float distance(const Node &a, const Node &b) {
+    return glm::distance(a.position, b.position);
+  }
 };
